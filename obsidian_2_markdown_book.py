@@ -38,18 +38,21 @@ def copy_file_content(source_file: str, target_file: str):
     # 移除 frontmatter 内容，增加 1 级标题，复制附带的附件
     with open(source_file, 'r') as f:
         is_frontmatter = False
+        skip_frontmatter = False
         for line in f:
             # 移除 frontmatter 内容
-            if not is_frontmatter and line.startswith('---'):
-                is_frontmatter = True
-                continue
-            elif is_frontmatter and line.startswith('---'):
-                is_frontmatter = False
-                continue
-            elif is_frontmatter:
-                if line.startswith('title'):
-                    new_lines.append('# ' + line.split(':')[1].strip() + '\n')
-                continue
+            if not skip_frontmatter:
+                if not is_frontmatter and line.startswith('---'):
+                    is_frontmatter = True
+                    continue
+                elif is_frontmatter and line.startswith('---'):
+                    is_frontmatter = False
+                    skip_frontmatter = True
+                    continue
+                elif is_frontmatter:
+                    if line.startswith('title'):
+                        new_lines.append('# ' + line.split(':')[1].strip() + '\n')
+                    continue
             # 检测是否有图片链接
             if line.startswith('!'):
                 # 提取图片链接
@@ -77,28 +80,40 @@ def main(input_file: str, output_dir: str):
     :param output_dir:
     :return:
     """
+    # 移除 output_dir 路径下的 markdown 文件
+    if os.path.exists(output_dir):
+        for root, dirs, files in os.walk(output_dir):
+            for file in files:
+                if file.endswith('.md'):
+                    os.remove(os.path.join(root, file))
+
     new_lines = []
     # 将 input 作为 README.md 文件，将文件转换成 markdown book 格式的文件
     with open(input_file, 'r') as f:
         is_frontmatter = False
+        skip_frontmatter = False
         for line in f:
             # 移除 frontmatter 内容
-            if not is_frontmatter and line.startswith('---'):
-                is_frontmatter = True
-                continue
-            elif is_frontmatter and line.startswith('---'):
-                is_frontmatter = False
-                continue
-            elif is_frontmatter:
-                if line.startswith('title'):
-                    new_lines.append('# ' + line.split(':')[1].strip() + '\n')
-                continue
+            if not skip_frontmatter:
+                if not is_frontmatter and line.startswith('---'):
+                    is_frontmatter = True
+                    continue
+                elif is_frontmatter and line.startswith('---'):
+                    is_frontmatter = False
+                    skip_frontmatter = True
+                    continue
+                elif is_frontmatter:
+                    if line.startswith('title'):
+                        new_lines.append('# ' + line.split(':')[1].strip() + '\n')
+                    continue
             # 列表格式: - 章节名: [源文件名称](源文件链接)
             if line.startswith('- '):
                 # 章节名
                 target_filename = line[2:].split(':')[0].strip() + '.md'
                 # 源文件链接
                 source_file_md_text = line[2:].split(':')[1].strip()
+                # 只保留文件链接
+                line = '- ' + source_file_md_text + '\n'
                 inline_links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', source_file_md_text)
                 file_link = inline_links[0][1]
                 # 复制文件内容
