@@ -56,8 +56,8 @@ def copy_file_content(source_file: str, target_file: str):
             # 检测是否有图片链接
             if line.startswith('!'):
                 # 提取图片链接
-                inline_links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', line)
-                file_link = inline_links[1]
+                inline_links = re.findall(r'!\[.*?\]\(([^)]+)\)', line)
+                file_link = inline_links[0]
                 attachment_dir = os.path.dirname(os.path.abspath(os.path.join(output_dir, file_link)))
                 if not os.path.exists(attachment_dir):
                     # 目录不存在，创建目录
