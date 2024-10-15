@@ -118,7 +118,7 @@ def main(input_file: str, output_dir: str):
                 file_link = inline_links[0][1]
                 # 复制文件内容
                 copy_file_content(
-                    os.path.join(os.path.dirname(input_file), file_link),
+                    os.path.join(os.path.dirname(input_file), file_link.replace('%20', ' ')),
                     os.path.join(output_dir, target_filename),
                 )
                 new_file_link = os.path.relpath(os.path.join(output_dir, target_filename), output_dir)
